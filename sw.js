@@ -60,6 +60,7 @@ class LazyWorker {
 				this.offlinePage = filename;
 				this.files.push(filename);
 				this.handleOfflinePage = true;
+				console.log(this);
 				return this;
 			}
 			
@@ -93,5 +94,4 @@ class LazyWorker {
 
 }
 
-// usage
-// createServiceWorker(['/style.css']).debug().offline('/offline.html').init()
+createServiceWorker(['/style.css']).debug().offline('/offline.html').init()
