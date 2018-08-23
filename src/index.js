@@ -1,60 +1,62 @@
-const self = this;
-const createServiceWorker = (cache = [], cacheName) => {
-	if (!cacheName) cacheName = Math.random().toString(36).substr(2, 9);
-    
-	return new LazyWorker(cacheName, cache);
-};
-
 class LazyWorker {
-    constructor(cacheName, filesToCache) {
-		this.cacheName = cacheName;
-		this.files = filesToCache;
-		this.handleOfflinePage = false;
-		this.debugLogging = false;
-		this.handleInstall = this.handleInstall.bind(this);
-		this.handleActivate = this.handleActivate.bind(this);
-		this.handleFetch = this.handleFetch.bind(this);
-	}
+  constructor(cacheName, filesToCache) {
+    this.cacheName = cacheName;
+    this.files = filesToCache;
+    this.handleOfflinePage = false;
+    this.debugLogging = false;
+    this.handleInstall = this.handleInstall.bind(this);
+    this.handleActivate = this.handleActivate.bind(this);
+    this.handleFetch = this.handleFetch.bind(this);
+  }
 
+  /**
+   *
+   * @param {} event
+   */
   handleInstall(event) {
-    const _this = this;
+    const thisWorker = this;
     event.waitUntil((async function installEvent() {
-      const cache = await caches.open(_this.cacheName);
-      _this.log(`Adding ${_this.files} to cache.`);
-      await cache.addAll(_this.files);
-      if (_this.skip) {
-        return self.skipWaiting();
-      }
+      const cache = await caches.open(thisWorker.cacheName);
+      thisWorker.log(`Adding ${thisWorker.files} to cache.`);
+      await cache.addAll(thisWorker.files);
+      if (thisWorker.skip) self.skipWaiting();
     }()));
   }
 
-  handleActivate() {
-
+  handleActivate(event) {
+    const thisWorker = this;
+    event.waitUntil((async function activateEvent() {
+      const keys = await caches.keys();
+      return Promise.all(
+        keys
+          .filter(key => key !== thisWorker.cacheName)
+          .map(name => caches.delete(name)),
+      );
+    })());
   }
 
   handleFetch(event) {
-    const _this = this;
+    const thisWorker = this;
     const { request } = event;
     // Prevent the default, and handle the request ourselves.
     event.respondWith(async function fetchEvent() {
       // Try to get the response from a cache.
-      const cachedResponse = await caches.match(request, { cacheName: _this.cacheName });
+      const cachedResponse = await caches.match(request, { cacheName: thisWorker.cacheName });
       if (cachedResponse) return cachedResponse;
       // if nothing's in the cache, return a fetch request
       // catch an error to serve offline pages
-      return fetch(request).catch(err => {
-        if (_this.handleOfflinePage) {
-          _this.log('Fetch failed; returning offline page instead.', err);
-          return caches.match(_this.offlinePage);
-        } else {
-          self.log('Unable to fetch, and offline pages disabled. Dying...');
-          throw err;
+      return fetch(request).catch((err) => {
+        if (thisWorker.handleOfflinePage) {
+          thisWorker.log('Fetch failed; returning offline page instead.', err);
+          return caches.match(thisWorker.offlinePage);
         }
+        self.log('Unable to fetch, and offline pages disabled. Dying...');
+        throw err;
       });
     }());
   }
-  
-  
+
+
   offline(filename) {
     this.log('enabling offline page');
     this.offlinePage = filename;
@@ -62,7 +64,7 @@ class LazyWorker {
     this.handleOfflinePage = true;
     return this;
   }
-  
+
   debug() {
     this.debugLogging = true;
     return this;
@@ -70,6 +72,7 @@ class LazyWorker {
 
   skipWaiting() {
     this.skip = true;
+    return this;
   }
 
   log(...messages) {
@@ -77,21 +80,29 @@ class LazyWorker {
       console.log('[worker]', ...messages);
     }
   }
-  
+
   maxAge(age) {
     // do max age stuff
     return this;
   }
-  
+
   init() {
     self.addEventListener('install', this.handleInstall);
     self.addEventListener('activate', this.handleActivate);
     self.addEventListener('fetch', this.handleFetch);
     return this;
-	}
-
-
+  }
 }
 
-// usage
+const createServiceWorker = (cache = [], name) => {
+  // default to a randomly generated name
+  let cacheName = name;
+  // radix 36 gives us a-z
+  if (!name) cacheName = Math.random().toString(36).substr(2, 9);
+
+  return new LazyWorker(cacheName, cache);
+};
+
+export default createServiceWorker;
+
 // createServiceWorker(['/style.css']).debug().offline('/offline.html').init()
