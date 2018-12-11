@@ -27,6 +27,9 @@ class LazyWorker {
     const thisWorker = this;
     event.waitUntil((async function activateEvent() {
       const keys = await caches.keys();
+      if (thisWorker.skip) {
+        //
+      }
       return Promise.all(
         keys
           .filter(key => key !== thisWorker.cacheName)
@@ -81,8 +84,13 @@ class LazyWorker {
     }
   }
 
+  /**
+   * Only let the worker live for a number of days
+   * @param {Number} age Age of the worker in *days*
+   */
   maxAge(age) {
     // do max age stuff
+    this.log('not implemented yet!');
     return this;
   }
 

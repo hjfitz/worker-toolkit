@@ -7,6 +7,7 @@ module.exports = {
     ],
     "env": {
         "serviceworker": true,
-        "browser": true
+        "browser": true,
+        "mocha": true
     }
 };

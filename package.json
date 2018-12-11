@@ -4,7 +4,7 @@
   "description": "Utils for service workers",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp pre-test && http-server test/"
   },
   "author": "Harry Fitzgerald <hfitz83@gmail.com>",
   "license": "GPL-3.0",
@@ -13,6 +13,10 @@
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-react": "^7.11.1"
+    "eslint-plugin-react": "^7.11.1",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-delete-lines": "^0.0.7",
+    "gulp-requirejs": "^1.1.1"
   }
 }
